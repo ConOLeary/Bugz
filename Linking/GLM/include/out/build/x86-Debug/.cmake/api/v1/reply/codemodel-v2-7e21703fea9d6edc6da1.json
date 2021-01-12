@@ -1,0 +1,55 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "glm_dummy::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-glm_dummy-Debug-6a2403751db1ee1d8f6c.json",
+					"name" : "glm_dummy",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/Con_2/Desktop/Comp Graphics/OpenGL-C---Tutorials-master/Linking/GLM/include/out/build/x86-Debug",
+		"source" : "C:/Users/Con_2/Desktop/Comp Graphics/OpenGL-C---Tutorials-master/Linking/GLM/include"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 1
+	}
+}

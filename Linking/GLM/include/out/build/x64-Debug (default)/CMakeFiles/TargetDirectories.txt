@@ -1,0 +1,3 @@
+C:/Users/Con_2/Desktop/Comp Graphics/OpenGL-C---Tutorials-master/Linking/GLM/include/out/build/x64-Debug (default)/CMakeFiles/glm_dummy.dir
+C:/Users/Con_2/Desktop/Comp Graphics/OpenGL-C---Tutorials-master/Linking/GLM/include/out/build/x64-Debug (default)/CMakeFiles/edit_cache.dir
+C:/Users/Con_2/Desktop/Comp Graphics/OpenGL-C---Tutorials-master/Linking/GLM/include/out/build/x64-Debug (default)/CMakeFiles/rebuild_cache.dir
