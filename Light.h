@@ -37,7 +37,7 @@ protected:
 	float constant;
 	float linear;
 	float quadratic;
-	float bright = 17.5; ///////////////////////////// CMDFPHONG
+	float bright = 50; ///////////////////////////// CMDFPHONG
 	float dim = 2.5;
 
 public:

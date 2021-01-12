@@ -1,8 +1,3 @@
-
-
-
-
-
 #include "Game.h"
 #include <random>
 #include <math.h>
@@ -10,6 +5,7 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <time.h> 
+#include <windows.h>
 
 #define CHUNK_SIZE 150
 #define ROCKS_PER_CHUNK 400
@@ -27,15 +23,17 @@ glm::vec3 SUN_LIGHT = glm::vec3(1.f, 1.f, 0.95f);
 
 glm::vec3 SUN_LOCATION = glm::vec3(0.f, -4.f, 0.f);
 
-float WALK = 6.0f;
-float RUN = 30.0f;
+const int OFFSETS[100] = { 9, 20, 34, 46, 47, 50, 58, 61, 93, 98, 116, 121, 128, 138, 139, 140, 154, 155, 166, 177, 178, 191, 200, 203, 206, 218, 221, 222, 223, 225, 237, 254, 266, 278, 285, 301, 310, 368, 396, 411, 422, 423, 425, 429, 446, 452, 453, 463, 472, 474, 475, 481, 486, 496, 521, 531, 563, 565, 568, 571, 589, 598, 616, 622, 630, 639, 644, 646, 665, 685, 713, 720, 721, 727, 752, 770, 771, 783, 790, 805, 808, 832, 837, 844, 845, 846, 863, 883, 892, 902, 905, 913, 916, 924, 964, 968, 971, 975, 980, 990 };
+const float WALK = 6.0f;
+const float RUN = 30.0f;
 glm::vec3 ROTATE = glm::vec3(0.f, 5.0f, 0.f);
 std::vector<MeshObj*>bugz;
-float ROCK_HEIGHT = -0.2;
+const float ROCK_HEIGHT = -0.2;
 int chunkMap[MAX_CHUNK_DIMENSION][MAX_CHUNK_DIMENSION];
 unsigned int updateCounter;
 ModelData myModelData;
 int headlightOn;
+int offsetCounter = 0;
 
 
 //MESH TO LOAD
@@ -246,7 +244,10 @@ void Game::initOBJModels()
 
 int genRandy(int upper, int lower)
 {
-	
+	offsetCounter += 1;
+	offsetCounter %= 100;
+	cout << "offsetCounter: " << offsetCounter << "\n\n";
+	srand(OFFSETS[offsetCounter]);
 	int num = (rand() % (upper - lower + 1)) + lower;
 	return num;
 }
@@ -273,7 +274,7 @@ Material* genMaterial()
 }
 void Game::genChunkModels(unsigned int chunkZ, unsigned int chunkX) //################################# CHUNK LOADER #################################
 {
-	srand(time(0));
+
 	//cout << "chunkZ: " << to_string(chunkZ) << "\n\n";
 	//cout << "chunkX: " << to_string(chunkX) << "\n\n";
 	
@@ -739,7 +740,7 @@ void Game::updateChunks(glm::vec3 position)
 		//cout << "Pushed " << to_string(xChunkAdrs + (zChunkAdrs * 10) + 1) << '\n\n';
 		toRender.push(xChunkAdrs + (zChunkAdrs * MAX_CHUNK_DIMENSION) + MAX_CHUNK_DIMENSION);
 	}
-	if (((zChunkAdrs - 1) >= 0) && (chunkMap[zChunkAdrs][xChunkAdrs - 1] == 0))
+	if (((zChunkAdrs - 1) >= 0) && (chunkMap[zChunkAdrs - 1][xChunkAdrs] == 0))
 	{
 		//cout << "Pushed " << to_string(xChunkAdrs + (zChunkAdrs * 10) + 1) << '\n\n';
 		toRender.push(xChunkAdrs + (zChunkAdrs * MAX_CHUNK_DIMENSION) - MAX_CHUNK_DIMENSION);
@@ -749,6 +750,7 @@ void Game::updateChunks(glm::vec3 position)
 
 	// Printing content of queue 
 	while (!toRender.empty()) {
+		Sleep(1);
 		//cout << ' ' << toRender.front() << "\n\n";
 		xChunkAdrs = toRender.front() % MAX_CHUNK_DIMENSION;
 		zChunkAdrs = (unsigned int)(toRender.front() / MAX_CHUNK_DIMENSION);

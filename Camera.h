@@ -22,9 +22,8 @@ private:
 	GLfloat lateralMomentum;
 	GLfloat longitudinalMomentum;
 	GLfloat verticalMomentum;
-	GLfloat passiveLateralSlow;
-	GLfloat passiveLongitudinalSlow;
-	GLfloat passiveVerticalSlow;
+	GLfloat flatPassiveSlow;
+	GLfloat percentPassiveSlow;
 	GLfloat lateralAcceleration;
 	GLfloat longitudinalAcceleration;
 	GLfloat verticalAcceleration;
@@ -61,13 +60,12 @@ public:
 		this->longitudinalMomentum = 0.f;
 		this->verticalMomentum = 0.f;
 
-		this->passiveLateralSlow = 0.3f;
-		this->passiveLongitudinalSlow = 0.3f;
-		this->passiveVerticalSlow = 0.3f;
+		this->flatPassiveSlow = 0.08f;
+		this->percentPassiveSlow = 0.01f;
 
-		this->lateralAcceleration = 0.4f;
-		this->longitudinalAcceleration = 0.4f;
-		this->verticalAcceleration = 0.4f;
+		this->lateralAcceleration = 0.5f;
+		this->longitudinalAcceleration = 0.5f;
+		this->verticalAcceleration = 0.5f;
 
 		this->sensitivity = 1.0f;
 
@@ -118,37 +116,43 @@ public:
 			this->position += this->right * this->lateralMomentum * dt;
 			this->position += this->front * this->longitudinalMomentum * dt;
 			this->position += this->up * this->verticalMomentum * dt;
-			if (lateralMomentum > passiveLateralSlow)
+			if (lateralMomentum > flatPassiveSlow)
 			{
-				lateralMomentum -= passiveLateralSlow;
+				lateralMomentum *= (1 - percentPassiveSlow);
+				lateralMomentum -= flatPassiveSlow;
 			}
-			else if (lateralMomentum < -passiveLateralSlow)
+			else if (lateralMomentum < -flatPassiveSlow)
 			{
-				lateralMomentum += passiveLateralSlow;
+				lateralMomentum *= (1 - percentPassiveSlow);
+				lateralMomentum += flatPassiveSlow;
 			}
 			else
 			{
 				lateralMomentum = 0;
 			}
-			if (longitudinalMomentum > passiveLongitudinalSlow)
+			if (longitudinalMomentum > flatPassiveSlow)
 			{
-				longitudinalMomentum -= passiveLongitudinalSlow;
+				longitudinalMomentum *= (1 - percentPassiveSlow);
+				longitudinalMomentum -= flatPassiveSlow;
 			}
-			else if (longitudinalMomentum < -passiveLongitudinalSlow)
+			else if (longitudinalMomentum < -flatPassiveSlow)
 			{
-				longitudinalMomentum += passiveLongitudinalSlow;
+				longitudinalMomentum *= (1 - percentPassiveSlow);
+				longitudinalMomentum += flatPassiveSlow;
 			}
 			else
 			{
 				longitudinalMomentum = 0;
 			}
-			if (verticalMomentum > passiveVerticalSlow)
+			if (verticalMomentum > flatPassiveSlow)
 			{
-				verticalMomentum -= passiveVerticalSlow;
+				verticalMomentum *= (1 - percentPassiveSlow);
+				verticalMomentum -= flatPassiveSlow;
 			}
-			else if (verticalMomentum < -passiveVerticalSlow)
+			else if (verticalMomentum < -flatPassiveSlow)
 			{
-				verticalMomentum += passiveVerticalSlow;
+				verticalMomentum *= (1 - percentPassiveSlow);
+				verticalMomentum += flatPassiveSlow;
 			}
 			else
 			{
