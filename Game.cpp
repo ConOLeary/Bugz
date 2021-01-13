@@ -14,19 +14,17 @@
 #define MAX_CHUNK_DIMENSION 100
 #define BIG_ROCK_RARITY 800
 #define CHECK_CHUNKS_EVERY 10
-#define RARITY_BEHAVIOUR_CHANGE 15
-//GLuint texture0;
+#define RARITY_BEHAVIOUR_CHANGE 25
+const float WALK = 5.0f;
+const float RUN = 30.0f;
+const float ROTATE_BY = 15.0f;
 glm::vec3 DIRTY_ROCK = glm::vec3(0.39f, 0.33f, 0.28f);
 glm::vec3 WILD_FIELD = glm::vec3(0.59f, 0.60f, 0.39f);
 glm::vec3 NUKE_LIGHT = glm::vec3(1.f, 0.3f, 0.1f);
 glm::vec3 SUN_LIGHT = glm::vec3(1.f, 1.f, 0.95f);
-
 glm::vec3 SUN_LOCATION = glm::vec3(0.f, -4.f, 0.f);
-
 const int OFFSETS[100] = { 9, 20, 34, 46, 47, 50, 58, 61, 93, 98, 116, 121, 128, 138, 139, 140, 154, 155, 166, 177, 178, 191, 200, 203, 206, 218, 221, 222, 223, 225, 237, 254, 266, 278, 285, 301, 310, 368, 396, 411, 422, 423, 425, 429, 446, 452, 453, 463, 472, 474, 475, 481, 486, 496, 521, 531, 563, 565, 568, 571, 589, 598, 616, 622, 630, 639, 644, 646, 665, 685, 713, 720, 721, 727, 752, 770, 771, 783, 790, 805, 808, 832, 837, 844, 845, 846, 863, 883, 892, 902, 905, 913, 916, 924, 964, 968, 971, 975, 980, 990 };
-const float WALK = 6.0f;
-const float RUN = 30.0f;
-glm::vec3 ROTATE = glm::vec3(0.f, 5.0f, 0.f);
+
 std::vector<MeshObj*>bugz;
 const float ROCK_HEIGHT = -0.2;
 int chunkMap[MAX_CHUNK_DIMENSION][MAX_CHUNK_DIMENSION];
@@ -246,7 +244,7 @@ int genRandy(int upper, int lower)
 {
 	offsetCounter += 1;
 	offsetCounter %= 100;
-	cout << "offsetCounter: " << offsetCounter << "\n\n";
+	//cout << "offsetCounter: " << offsetCounter << "\n\n";
 	srand(OFFSETS[offsetCounter]);
 	int num = (rand() % (upper - lower + 1)) + lower;
 	return num;
@@ -833,20 +831,22 @@ void Game::updateBugz()
 			thisModel->lastDecision = 3;
 
 		}
-		//cout << "thisModel->lastDecision: " << to_string(thisModel->lastDecision) << "\n";
+		cout << "thisModel->lastDecision: " << to_string(thisModel->lastDecision) << "\n";
 		switch (thisModel->lastDecision)
 		{
 		case 1:
 			//thisModel->meshObjs[0]->rotate(ROTATE);
-			thisModel->meshObjs[0]->yaw += 15.0f;
-			thisModel->meshObjs[0]->rotateThis();
+			thisModel->meshObjs[0]->yaw += ROTATE_BY; //changes their forward direction
+			//thisModel->meshObjs[0]->rotateThis();
+			thisModel->meshObjs[0]->rotate(glm::vec3(0.f, -ROTATE_BY, 0.0f));
 			break;
 		case 4:
+			thisModel->meshObjs[0]->rotate(glm::vec3(0.f, ROTATE_BY, 0.0f));
 			//thisModel->meshObjs[0]->rotate(-ROTATE);
 			//thisModel->meshObjs[0]->glRotatef(45.0, 0.0, 0.0);
-			thisModel->meshObjs[0]->yaw -= 15.0f;
+			thisModel->meshObjs[0]->yaw -= ROTATE_BY;
 
-			thisModel->meshObjs[0]->rotateThis();
+			//thisModel->meshObjs[0]->rotateThis();
 			break;
 		case 2:
 			thisModel->meshObjs[0]->position -= thisModel->meshObjs[0]->front * WALK * dt;

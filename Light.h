@@ -38,7 +38,7 @@ protected:
 	float linear;
 	float quadratic;
 	float bright = 50; ///////////////////////////// CMDFPHONG
-	float dim = 2.5;
+	float dim = 25;
 
 public:
 	PointLight(glm::vec3 position, float intensity = 1.f, glm::vec3 color = glm::vec3(1.f, 1.f, 1.f),
