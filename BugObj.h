@@ -13,7 +13,7 @@ typedef struct
 	std::vector<glm::vec2> mTextureCoords;
 } ModelData;
 
-class MeshObj
+class BugObj
 {
 private:
 	GLuint VAO;
@@ -51,9 +51,11 @@ private:
 
 	void updateModelMatrix()
 	{
+		//this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(10.f), glm::vec3(0.f, 0.f, 20.f));
 		this->ModelMatrix = glm::mat4(1.f);
-		this->origin = this->position;
+		this->origin = this->position; // kind of a hack; needs to be done for the turning to not rotate from the spawning point
 		this->ModelMatrix = glm::translate(this->ModelMatrix, this->origin);
+
 		this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(this->rotation.x), glm::vec3(1.f, 0.f, 0.f));
 		this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(this->rotation.y), glm::vec3(0.f, 1.f, 0.f));
 		this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(this->rotation.z), glm::vec3(0.f, 0.f, 1.f));
@@ -62,8 +64,12 @@ private:
 	}
 
 public:
+	std::vector<ModelData> modelData;
+	int behaviour; //0= flake. 1=paro
+	int decision; //0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide
 
-
+	int flightLeft;
+	int flapCount;
 	glm::vec3 worldUp;
 	glm::vec3 front;
 	glm::vec3 right;
@@ -81,17 +87,19 @@ public:
 	glm::mat4 ModelMatrix;
 
 	ModelData mesh_data;
-	MeshObj(ModelData modelData,
+	BugObj(std::vector<ModelData> modelData,
 		glm::vec3 position = glm::vec3(0.f),
 		glm::vec3 origin = glm::vec3(0.f),
 		glm::vec3 rotation = glm::vec3(0.f),
 		glm::vec3 scale = glm::vec3(0.1f))
 	{
-		this->initAssimpVAO(modelData);
-
-		//std::cout << glm::to_string(modelData.mVertices[0]) << std::endl;
-
-		this->mesh_data = modelData;
+		this->behaviour = 0;
+		this->decision = 0;
+		this->flightLeft = 0;
+		flapCount = 0;
+		this->initAssimpVAO(modelData[0]);
+		this->modelData = modelData;
+		this->mesh_data = modelData[0];
 
 		this->updateModelMatrix();
 
@@ -112,7 +120,7 @@ public:
 		this->updateCameraVectors();
 	}
 
-	~MeshObj()
+	~BugObj()
 	{
 		glDeleteVertexArrays(1, &this->VAO);
 		glDeleteBuffers(1, &this->VBO1);
@@ -124,7 +132,24 @@ public:
 	{
 		this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(10.f), glm::vec3(20.f, 0.f, 0.f));
 	}*/
-
+	void switchWings()
+	{
+		if (flapCount == 0)
+			this->initAssimpVAO(modelData[1]);
+		else
+			this->initAssimpVAO(modelData[0]);
+		flapCount += 1; flapCount %= 2;
+	}
+	void openWings()
+	{
+		flapCount = 1;
+		this->initAssimpVAO(modelData[1]);
+	}
+	void closeWings()
+	{
+		flapCount = 1;
+		this->initAssimpVAO(modelData[1]);
+	}
 	void updateCameraVectors()
 	{
 		this->front.x = cos(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));

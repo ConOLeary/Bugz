@@ -20,7 +20,8 @@ private:
 
 public:
 	int behaviour; //0= flake. 1=paro
-	int lastDecision; //0= stall, 1= turn, 2= walk, 3= runaway
+	int lastDecision; //0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn
+	int flightLeft; //0 = no, 1 = fly
 	Material* material;
 	Texture* overrideTextureDiffuse;
 	Texture* overrideTextureSpecular;
@@ -81,6 +82,7 @@ public:
 		this->overrideTextureSpecular = orTexSpec;
 		this->behaviour = 0;
 		this->lastDecision = 0;
+		this->flightLeft = 0;
 
 		for (auto* i : meshes)
 		{

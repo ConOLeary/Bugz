@@ -7,6 +7,8 @@
 #include <time.h> 
 #include <windows.h>
 
+#define MESH_NAME1 "Objects/ladybug_black.obj"
+#define MESH_NAME2 "Objects/ladybug_flap.obj"
 #define CHUNK_SIZE 150
 #define ROCKS_PER_CHUNK 400
 #define BUGS_PER_CHUNK 10 ///////////////////////////// CMDFBUGS
@@ -15,31 +17,31 @@
 #define BIG_ROCK_RARITY 800
 #define CHECK_CHUNKS_EVERY 10
 #define RARITY_BEHAVIOUR_CHANGE 25
+#define SKETCH_IFTHIS_CLOSE 80
+#define UNSKETCH_IFTHIS_FAR 100 
+#define FLIGHT_LENGTHENER 10
+#define FLYUP_THRESHOLD 50
+
 const float WALK = 5.0f;
 const float RUN = 30.0f;
 const float ROTATE_BY = 15.0f;
+const float ROCK_HEIGHT = -0.2;
+const float BUG_HEIGHT = -0.3;
+const float MAX_FLIGH_HIGH = 15.0;
+const int OFFSETS[100] = { 9, 20, 34, 46, 47, 50, 58, 61, 93, 98, 116, 121, 128, 138, 139, 140, 154, 155, 166, 177, 178, 191, 200, 203, 206, 218, 221, 222, 223, 225, 237, 254, 266, 278, 285, 301, 310, 368, 396, 411, 422, 423, 425, 429, 446, 452, 453, 463, 472, 474, 475, 481, 486, 496, 521, 531, 563, 565, 568, 571, 589, 598, 616, 622, 630, 639, 644, 646, 665, 685, 713, 720, 721, 727, 752, 770, 771, 783, 790, 805, 808, 832, 837, 844, 845, 846, 863, 883, 892, 902, 905, 913, 916, 924, 964, 968, 971, 975, 980, 990 };
 glm::vec3 DIRTY_ROCK = glm::vec3(0.39f, 0.33f, 0.28f);
 glm::vec3 WILD_FIELD = glm::vec3(0.59f, 0.60f, 0.39f);
 glm::vec3 NUKE_LIGHT = glm::vec3(1.f, 0.3f, 0.1f);
 glm::vec3 SUN_LIGHT = glm::vec3(1.f, 1.f, 0.95f);
 glm::vec3 SUN_LOCATION = glm::vec3(0.f, -4.f, 0.f);
-const int OFFSETS[100] = { 9, 20, 34, 46, 47, 50, 58, 61, 93, 98, 116, 121, 128, 138, 139, 140, 154, 155, 166, 177, 178, 191, 200, 203, 206, 218, 221, 222, 223, 225, 237, 254, 266, 278, 285, 301, 310, 368, 396, 411, 422, 423, 425, 429, 446, 452, 453, 463, 472, 474, 475, 481, 486, 496, 521, 531, 563, 565, 568, 571, 589, 598, 616, 622, 630, 639, 644, 646, 665, 685, 713, 720, 721, 727, 752, 770, 771, 783, 790, 805, 808, 832, 837, 844, 845, 846, 863, 883, 892, 902, 905, 913, 916, 924, 964, 968, 971, 975, 980, 990 };
 
-std::vector<MeshObj*>bugz;
-const float ROCK_HEIGHT = -0.2;
+std::vector<BugObj*>bugz;
+
 int chunkMap[MAX_CHUNK_DIMENSION][MAX_CHUNK_DIMENSION];
 unsigned int updateCounter;
-ModelData myModelData;
+std::vector<ModelData> myModelData;
 int headlightOn;
 int offsetCounter = 0;
-
-
-//MESH TO LOAD
-//----------------------------------------------------------------------------*/
-//// this mesh is a dae file format but you should be able to use any other format too, obj is typically what is used
-//// put the mesh in your project directory, or provide a filepath for it here
-#define MESH_NAME "Objects/ladybug_black.obj"
-
 
 //Private functions
 void Game::initGLFW()
@@ -229,9 +231,10 @@ ModelData readInObj(const char* file_name)
 }
 
 void Game::initOBJModels()
-{
-	myModelData = readInObj(MESH_NAME);
-	bugz.push_back(new MeshObj(myModelData,
+{//std::vector<ModelData*>& myModelData;
+	myModelData.push_back(readInObj(MESH_NAME1));//readInObj(MESH_NAME1)
+	myModelData.push_back(readInObj(MESH_NAME2));
+	bugz.push_back(new BugObj(myModelData,
 		glm::vec3(0.f, 0.f, 0.f),
 		glm::vec3(0.f, 0.f, 0.f),
 		glm::vec3(0.f, 0.f, 0.f),
@@ -262,24 +265,16 @@ Material* genMaterial()
 	cout << "specular: " << glm::to_string(specular) << "\n\n";*/
 
 	return (new Material(ambient, diffuse, specular, 0, 1));
-	/*Material(
-		glm::vec3 ambient,
-		glm::vec3 diffuse,
-		glm::vec3 specular,
-		GLint diffuseTex,
-		GLint specularTex
-	)*/
 }
+
 void Game::genChunkModels(unsigned int chunkZ, unsigned int chunkX) //################################# CHUNK LOADER #################################
 {
-
 	//cout << "chunkZ: " << to_string(chunkZ) << "\n\n";
 	//cout << "chunkX: " << to_string(chunkX) << "\n\n";
 	
 	std::vector<Mesh*>rocks;
 	std::vector<Mesh*>grounds;
 	
-
 	int xChunkOffset = chunkX * CHUNK_SIZE;
 	int zChunkOffset = chunkZ * CHUNK_SIZE;
 	//cout << "floor origin: " << glm::to_string(glm::vec3(xChunkOffset - (float)(CHUNK_SIZE / 2), ROCK_HEIGHT - 0.5f, zChunkOffset - (float)(CHUNK_SIZE / 2))) << "\n\n";
@@ -292,7 +287,7 @@ void Game::genChunkModels(unsigned int chunkZ, unsigned int chunkX) //##########
 		float bugZ = (float)(genRandy(0, -CHUNK_SIZE));
 		//bugzzz
 		this->models.push_back(new Model(
-			glm::vec3(bugX + xChunkOffset, ROCK_HEIGHT, -bugZ - zChunkOffset),
+			glm::vec3(bugX + xChunkOffset, BUG_HEIGHT, -bugZ - zChunkOffset),
 			genMaterial(),
 			this->textures[TEX_CONTAINER],
 			this->textures[TEX_CONTAINER_SPECULAR],
@@ -771,7 +766,7 @@ void Game::updateInput()
 	this->camera.updateInput(dt, -1, this->mouseOffsetX, this->mouseOffsetY);
 }
 
-void Game::updateBugz()
+void Game::bugDriver()
 {
 	/*genType::value_type glm::distance(genType const& p0,
 	genType const& p1
@@ -780,22 +775,24 @@ void Game::updateBugz()
 	//int lastDecision; //0= stall, 1= turnleft, 2= walk, 3= runaway, 4= turnRight
 	for (unsigned int i = 0; i < this->models.size(); i++)
 	{
-		Model* thisModel = models[i];
-		//std::vector<MeshObj*>& meshObjs
+		BugObj* thisBug = models[i]->myBugObjs[0];
+		//std::vector<BugObj*>& meshObjs
 		//cout << "model pos: " << to_string(models[i]->meshObjs[0]->position) << "\n";
 		glm::vec3 pos = this->camera.getPosition();
-		float distance = glm::distance(thisModel->meshObjs[0]->position, pos);
+		float distance = glm::distance(thisBug->position, pos);
 		//cout << "distance: " << to_string(distance) << "\n";
 		//cout << "thisModel->behaviour: " << to_string(thisModel->behaviour) << "\n";
+
 		if ((distance < 80) && (headlightOn == 1))
 		{
-			thisModel->behaviour = 1;
-			thisModel->lastDecision = 3;
+			thisBug->behaviour = 1;
+			thisBug->decision = 3;
+			thisBug->flightLeft += FLIGHT_LENGTHENER;
 		}
 		else if ((distance > 100) || (headlightOn == 0))
 		{
-			thisModel->behaviour = 0;
-			thisModel->lastDecision = 2;
+			thisBug->behaviour = 0;
+			thisBug->decision = 2;
 		}/*
 		else if (distance > 300)
 		{
@@ -804,23 +801,23 @@ void Game::updateBugz()
 		srand(time(0));
 		int rand = genRandy(RARITY_BEHAVIOUR_CHANGE, 0);
 		//thisModel->meshObjs[0]->rotateThis();
-		thisModel->meshObjs[0]->updateCameraVectors();
-		if (thisModel->behaviour == 0)
+		thisBug->updateCameraVectors();
+		if (thisBug->behaviour == 0)
 		{
 			switch (rand)
 			{
 			case 0:
-				thisModel->lastDecision = 0;
+				thisBug->decision = 0;
 				break;
 			case 2:
 			case 5:
-				thisModel->lastDecision = 2;
+				thisBug->decision = 2;
 				break;
 			case 4:
-				thisModel->lastDecision = 4;
+				thisBug->decision = 4;
 				break;
 			case 1:
-				thisModel->lastDecision = 1;
+				thisBug->decision = 1;
 				break;
 			default:
 				break;
@@ -828,63 +825,64 @@ void Game::updateBugz()
 		}
 		else
 		{
-			thisModel->lastDecision = 3;
+			if (thisBug->position[1] >= MAX_FLIGH_HIGH)
+			{
 
+			}
+			if ( thisBug->flightLeft > FLYUP_THRESHOLD )
+			{
+				thisBug->decision = 5;
+			}
+			else if ( thisBug->flightLeft > 0))
+			{
+
+			}
+
+			switch (rand)
+			{
+			case 0: case 1:
+				thisBug->decision 
+			}
 		}
-		cout << "thisModel->lastDecision: " << to_string(thisModel->lastDecision) << "\n";
-		switch (thisModel->lastDecision)
+		//behaviour 0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide, 8 = glide turn, 9 = glide other turn
+		////////////////////////////////////////// BUG MADE TO ACT BASED ON STATE MACHINE CONDITIONS \/
+		
+
+		cout << "thisModel->decision: " << to_string(thisBug->decision) << "\n";
+		switch (thisBug->decision)
 		{
 		case 1:
-			//thisModel->meshObjs[0]->rotate(ROTATE);
-			thisModel->meshObjs[0]->yaw += ROTATE_BY; //changes their forward direction
-			//thisModel->meshObjs[0]->rotateThis();
-			thisModel->meshObjs[0]->rotate(glm::vec3(0.f, -ROTATE_BY, 0.0f));
+		case 8:
+			thisBug->yaw += ROTATE_BY; //changes their forward direction
+			thisBug->rotate(glm::vec3(0.f, -ROTATE_BY, 0.0f));
 			break;
 		case 4:
-			thisModel->meshObjs[0]->rotate(glm::vec3(0.f, ROTATE_BY, 0.0f));
-			//thisModel->meshObjs[0]->rotate(-ROTATE);
-			//thisModel->meshObjs[0]->glRotatef(45.0, 0.0, 0.0);
-			thisModel->meshObjs[0]->yaw -= ROTATE_BY;
-
-			//thisModel->meshObjs[0]->rotateThis();
+		case 9:
+			thisBug->rotate(glm::vec3(0.f, ROTATE_BY, 0.0f));
+			thisBug->yaw -= ROTATE_BY;
 			break;
 		case 2:
-			thisModel->meshObjs[0]->position -= thisModel->meshObjs[0]->front * WALK * dt;
+			thisBug->position -= thisBug->front * WALK * dt;
 			break;
 		case 3:
-			thisModel->meshObjs[0]->position -= thisModel->meshObjs[0]->front * RUN * dt;
+			thisBug->position -= thisBug->front * RUN * dt;
+			thisBug->switchWings();
 			break;
 
 		}
-		
-
-		
-		//int lastDecision; //0= stall, 1= turnleft, 2= walk, 3= runaway, 4= turnRight
-
-		//this->models[i]->meshObjs[0]->scaleUp(glm::vec3(0.1f, 0.1f, 0.1f));
 	}
-
-
-
-
 }
 
 void Game::update()
 {
 	//UPDATE INPUT ---
-	this->updateBugz();
 	this->updateDt();
 	this->updateInput();
+	this->bugDriver();
 }
 
 void Game::render()
 {
-
-	// counter = counter + 1;
-	//if (counter > 50) {
-	//	decayRate = 0.5;
-	//	glUniform1f()
-	//}
 
 
 	//UPDATE --- 

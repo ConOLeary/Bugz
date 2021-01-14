@@ -29,7 +29,7 @@
 #include"Texture.h"
 #include"Material.h"
 #include"Mesh.h"
-#include"MeshObj.h"
+#include"BugObj.h"
 #include"Model.h"
 #include"Light.h"
 
