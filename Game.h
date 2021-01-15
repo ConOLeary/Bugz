@@ -119,6 +119,7 @@ public:
 	void updateKeyboardInput();
 	void updateChunks(glm::vec3);
 	void updateInput();
+	void updateBugDecisions(glm::vec3 cameraPos);
 	void bugDriver();
 	void update();
 	void render();

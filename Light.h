@@ -37,12 +37,12 @@ protected:
 	float constant;
 	float linear;
 	float quadratic;
-	float bright = 50; ///////////////////////////// CMDFPHONG
-	float dim = 25;
+	float bright = 90; ///////////////////////////// CMDFPHONG
+	float dim = 15;
 
 public:
 	PointLight(glm::vec3 position, float intensity = 1.f, glm::vec3 color = glm::vec3(1.f, 1.f, 1.f),
-		float constant = 1.f, float linear = .0015f, float quadratic = .01f)
+		float constant = 0.15f, float linear = .0002f, float quadratic = .02f)
 		: Light(intensity, color)
 	{
 		this->position = position;

@@ -59,7 +59,7 @@
     <ClInclude Include="Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MeshObj.h">
+    <ClInclude Include="BugObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

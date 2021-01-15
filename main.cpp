@@ -5,7 +5,7 @@
 int main()
 {
 	Game game("Final Project",
-		1080, 1080,
+		1920, 1080,
 		4, 4,
 		false);
 

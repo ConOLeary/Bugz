@@ -9,25 +9,34 @@
 
 #define MESH_NAME1 "Objects/ladybug_black.obj"
 #define MESH_NAME2 "Objects/ladybug_flap.obj"
-#define CHUNK_SIZE 150
-#define ROCKS_PER_CHUNK 400
-#define BUGS_PER_CHUNK 10 ///////////////////////////// CMDFBUGS
+#define CHUNK_SIZE 250
+#define ROCKS_PER_CHUNK 700
+#define BUGS_PER_CHUNK 20 ///////////////////////////// CMDFBUGS
 #define MAX_ROCK_SIZE 3
 #define MAX_CHUNK_DIMENSION 100
-#define BIG_ROCK_RARITY 800
+#define BIG_ROCK_RARITY 250
 #define CHECK_CHUNKS_EVERY 10
-#define RARITY_BEHAVIOUR_CHANGE 25
-#define SKETCH_IFTHIS_CLOSE 80
-#define UNSKETCH_IFTHIS_FAR 100 
-#define FLIGHT_LENGTHENER 10
-#define FLYUP_THRESHOLD 50
+#define CHECK_BUGS_EVERY 10
+#define RARITY_BEHAVIOUR_CHANGE 35
+#define SKETCH_IFTHIS_CLOSE 125
+#define UNSKETCH_IFTHIS_FAR 150
+#define FLIGHT_TENDENCY_INCREASE 25
+#define FLIGHT_TENDENCY_DECREASE 20
+#define MAX_FLIGHT_TENDENCY 100
+#define FLYUPIF 22
 
 const float WALK = 5.0f;
-const float RUN = 30.0f;
+const float GLIDE = 13.0f;
+const float RUN = 35.0f;
 const float ROTATE_BY = 15.0f;
-const float ROCK_HEIGHT = -0.2;
-const float BUG_HEIGHT = -0.3;
-const float MAX_FLIGH_HIGH = 15.0;
+const float ROCK_HEIGHT = -0.45;
+const float BUG_HEIGHT = -1.0;
+const float FLYUP_SPEED = 3.0;
+const float FLYDOWN_SPEED = 1.3;
+const float MAX_FLIGH_HIGH = 50.0;
+const float SPECULARNESS_BUGS = 0.7;
+const float SPECULARNESS_ROCKS = 0.23;
+const float SPECULARNESS_GROUND = 0.23;
 const int OFFSETS[100] = { 9, 20, 34, 46, 47, 50, 58, 61, 93, 98, 116, 121, 128, 138, 139, 140, 154, 155, 166, 177, 178, 191, 200, 203, 206, 218, 221, 222, 223, 225, 237, 254, 266, 278, 285, 301, 310, 368, 396, 411, 422, 423, 425, 429, 446, 452, 453, 463, 472, 474, 475, 481, 486, 496, 521, 531, 563, 565, 568, 571, 589, 598, 616, 622, 630, 639, 644, 646, 665, 685, 713, 720, 721, 727, 752, 770, 771, 783, 790, 805, 808, 832, 837, 844, 845, 846, 863, 883, 892, 902, 905, 913, 916, 924, 964, 968, 971, 975, 980, 990 };
 glm::vec3 DIRTY_ROCK = glm::vec3(0.39f, 0.33f, 0.28f);
 glm::vec3 WILD_FIELD = glm::vec3(0.59f, 0.60f, 0.39f);
@@ -176,10 +185,11 @@ void Game::initTextures()
 
 void Game::initMaterials()
 {
+	glm::vec3 lessSpecularRock = glm::vec3(DIRTY_ROCK[0] * SPECULARNESS_ROCKS, DIRTY_ROCK[1] * SPECULARNESS_ROCKS, DIRTY_ROCK[2] * SPECULARNESS_ROCKS);
 	this->materials.push_back(new Material(DIRTY_ROCK, DIRTY_ROCK, DIRTY_ROCK,
 		0, 1));
-	glm::vec3 lessShinyField = glm::vec3(WILD_FIELD[0] * 0.5, WILD_FIELD[1] * 0.5, WILD_FIELD[2] * 0.5);
-	this->materials.push_back(new Material(lessShinyField, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
+	glm::vec3 lessSpecularGround = glm::vec3(WILD_FIELD[0] * SPECULARNESS_GROUND, WILD_FIELD[1] * SPECULARNESS_GROUND, WILD_FIELD[2] * SPECULARNESS_GROUND);
+	this->materials.push_back(new Material(lessSpecularGround, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
 		0, 1));
 }
 
@@ -264,7 +274,7 @@ Material* genMaterial()
 	cout << "diffuse: " << glm::to_string(diffuse) << "\n\n";
 	cout << "specular: " << glm::to_string(specular) << "\n\n";*/
 
-	return (new Material(ambient, diffuse, specular, 0, 1));
+	return (new Material(ambient, diffuse, specular * SPECULARNESS_BUGS, 0, 1));
 }
 
 void Game::genChunkModels(unsigned int chunkZ, unsigned int chunkX) //################################# CHUNK LOADER #################################
@@ -299,7 +309,7 @@ void Game::genChunkModels(unsigned int chunkZ, unsigned int chunkX) //##########
 
 	int amountRocks = genRandy(ROCKS_PER_CHUNK, 0);
 	//cout << "AMOUNT ROCKS: " << to_string(amountRocks) << "\n\n";
-	#pragma omp parallel 
+	
 	{
 		for (int i = 0; i < amountRocks; i++)
 		{
@@ -688,7 +698,7 @@ void Game::updateChunks(glm::vec3 position)
 
 	//cout << "zChunkAdrs: " << to_string(zChunkAdrs) << "\n";
 	//cout << "xChunkAdrs: " << to_string(xChunkAdrs) << "\n\n";
-	cout << "[camera] position: " << to_string(position[0]) << "  " << to_string(-position[2]) << "\n\n";
+	//cout << "[camera] position: " << to_string(position[0]) << "  " << to_string(-position[2]) << "\n\n";
 	queue<int> toRender;
 	
 	if (((xChunkAdrs + 1) < MAX_CHUNK_DIMENSION) && (chunkMap[zChunkAdrs][xChunkAdrs + 1] == 0))
@@ -740,60 +750,65 @@ void Game::updateChunks(glm::vec3 position)
 	}
 	
 	
-
-	// Printing content of queue 
-	while (!toRender.empty()) {
-		Sleep(1);
-		//cout << ' ' << toRender.front() << "\n\n";
-		xChunkAdrs = toRender.front() % MAX_CHUNK_DIMENSION;
-		zChunkAdrs = (unsigned int)(toRender.front() / MAX_CHUNK_DIMENSION);
-		//cout << "zChunkAdrs(at chunk genloop thing): " << to_string(zChunkAdrs) << "\n";
-		//cout << "xChunkAdrs(at chunk genloop thing): " << to_string(xChunkAdrs) << "\n\n";
-		toRender.pop();
-		this->genChunkModels(zChunkAdrs - ((MAX_CHUNK_DIMENSION / 2) - 1), xChunkAdrs - ((MAX_CHUNK_DIMENSION / 2) - 1));
-		chunkMap[zChunkAdrs][xChunkAdrs] = 1;
+	#pragma omp parallel
+	{
+		// Printing content of queue 
+		while (!toRender.empty()) {
+			Sleep(1);
+			//cout << ' ' << toRender.front() << "\n\n";
+			xChunkAdrs = toRender.front() % MAX_CHUNK_DIMENSION;
+			zChunkAdrs = (unsigned int)(toRender.front() / MAX_CHUNK_DIMENSION);
+			//cout << "zChunkAdrs(at chunk genloop thing): " << to_string(zChunkAdrs) << "\n";
+			//cout << "xChunkAdrs(at chunk genloop thing): " << to_string(xChunkAdrs) << "\n\n";
+			toRender.pop();
+			this->genChunkModels(zChunkAdrs - ((MAX_CHUNK_DIMENSION / 2) - 1), xChunkAdrs - ((MAX_CHUNK_DIMENSION / 2) - 1));
+			chunkMap[zChunkAdrs][xChunkAdrs] = 1;
+		}
 	}
+
 }
 void Game::updateInput()
 {
-	updateCounter++;
 	glfwPollEvents();
-
 	this->updateKeyboardInput();
 	this->updateMouseInput();
-	if(updateCounter % CHECK_CHUNKS_EVERY == 0)
-		this->updateChunks(this->camera.getPosition());
 	this->camera.updateInput(dt, -1, this->mouseOffsetX, this->mouseOffsetY);
 }
 
-void Game::bugDriver()
+void Game::updateBugDecisions(glm::vec3 camerPos)
 {
-	/*genType::value_type glm::distance(genType const& p0,
-	genType const& p1
-	)*/
-	//int behaviour; //0= flake. 1=paro
-	//int lastDecision; //0= stall, 1= turnleft, 2= walk, 3= runaway, 4= turnRight
 	for (unsigned int i = 0; i < this->models.size(); i++)
 	{
 		BugObj* thisBug = models[i]->myBugObjs[0];
-		//std::vector<BugObj*>& meshObjs
+		//cout << "flightTendency: " << to_string(thisBug->flightTendency) << "\n";
 		//cout << "model pos: " << to_string(models[i]->meshObjs[0]->position) << "\n";
-		glm::vec3 pos = this->camera.getPosition();
-		float distance = glm::distance(thisBug->position, pos);
+
+
 		//cout << "distance: " << to_string(distance) << "\n";
 		//cout << "thisModel->behaviour: " << to_string(thisModel->behaviour) << "\n";
-
-		if ((distance < 80) && (headlightOn == 1))
+		if (thisBug->flightTendency > FLIGHT_TENDENCY_DECREASE)
+			thisBug->flightTendency -= FLIGHT_TENDENCY_DECREASE;
+		if ((headlightOn == 1) || (thisBug->behaviour == 1))
 		{
-			thisBug->behaviour = 1;
-			thisBug->decision = 3;
-			thisBug->flightLeft += FLIGHT_LENGTHENER;
+			float distance = glm::distance(thisBug->position, camerPos);
+			if (distance < SKETCH_IFTHIS_CLOSE)
+			{
+				if (thisBug->flightTendency < MAX_FLIGHT_TENDENCY)
+					thisBug->flightTendency += FLIGHT_TENDENCY_INCREASE;
+				if (thisBug->behaviour == 0)
+				{
+					thisBug->behaviour = 1;
+					thisBug->decision = 3;
+				}
+			}
+			else if ((distance > UNSKETCH_IFTHIS_FAR) && (thisBug->behaviour == 1))
+			{
+				thisBug->behaviour = 0;
+				thisBug->decision = 2;
+			}
 		}
-		else if ((distance > 100) || (headlightOn == 0))
-		{
-			thisBug->behaviour = 0;
-			thisBug->decision = 2;
-		}/*
+
+		/*
 		else if (distance > 300)
 		{
 			models.erase(i);
@@ -802,15 +817,58 @@ void Game::bugDriver()
 		int rand = genRandy(RARITY_BEHAVIOUR_CHANGE, 0);
 		//thisModel->meshObjs[0]->rotateThis();
 		thisBug->updateCameraVectors();
-		if (thisBug->behaviour == 0)
+
+		////decision 0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide, 8 = glide turn, 9 = glide other turn
+
+		if (thisBug->flightTendency > FLYUPIF)
+		{
+			if (thisBug->position[1] < MAX_FLIGH_HIGH)
+			{
+				thisBug->decision = 5;
+			}
+			else
+			{
+				thisBug->decision = 6;
+			}
+		}
+		else if (thisBug->position[1] > BUG_HEIGHT)
+		{
+			thisBug->decision = 7;
+			switch (rand)
+			{
+			case 0:case 1:case 2:case 3:
+				thisBug->decision = 8;
+				break;
+			case 4:case 5:case 6:case 7:
+				thisBug->decision = 9;
+				break;
+			}
+		}
+		else if (thisBug->behaviour == 1)
 		{
 			switch (rand)
 			{
-			case 0:
+			case 2:case 5:case 3:case 0:case 6:
+				thisBug->decision = 3;
+				break;
+			case 4:
+				thisBug->decision = 4;
+				break;
+			case 1:
+				thisBug->decision = 1;
+				break;
+			default:
+				break;
+			}
+		}
+		else if (thisBug->behaviour == 0)
+		{
+			switch (rand)
+			{
+			case 0:case 6:case 9:
 				thisBug->decision = 0;
 				break;
-			case 2:
-			case 5:
+			case 2:case 5:case 3:case 7:case 8:
 				thisBug->decision = 2;
 				break;
 			case 4:
@@ -823,62 +881,100 @@ void Game::bugDriver()
 				break;
 			}
 		}
-		else
-		{
-			if (thisBug->position[1] >= MAX_FLIGH_HIGH)
-			{
+	}
+}
 
-			}
-			if ( thisBug->flightLeft > FLYUP_THRESHOLD )
-			{
-				thisBug->decision = 5;
-			}
-			else if ( thisBug->flightLeft > 0))
-			{
-
-			}
-
-			switch (rand)
-			{
-			case 0: case 1:
-				thisBug->decision 
-			}
-		}
-		//behaviour 0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide, 8 = glide turn, 9 = glide other turn
+void Game::bugDriver()
+{
+	for (unsigned int i = 0; i < this->models.size(); i++)
+	{
+		BugObj* thisBug = models[i]->myBugObjs[0];
+		//decision 0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide, 8 = glide turn, 9 = glide other turn
 		////////////////////////////////////////// BUG MADE TO ACT BASED ON STATE MACHINE CONDITIONS \/
 		
-
-		cout << "thisModel->decision: " << to_string(thisBug->decision) << "\n";
+		//cout << "thisModel->decision: " << to_string(thisBug->decision) << "\n";
 		switch (thisBug->decision)
 		{
 		case 1:
-		case 8:
+			thisBug->closeWings();
 			thisBug->yaw += ROTATE_BY; //changes their forward direction
 			thisBug->rotate(glm::vec3(0.f, -ROTATE_BY, 0.0f));
 			break;
 		case 4:
-		case 9:
+			thisBug->closeWings();
 			thisBug->rotate(glm::vec3(0.f, ROTATE_BY, 0.0f));
 			thisBug->yaw -= ROTATE_BY;
 			break;
 		case 2:
+			thisBug->closeWings();
 			thisBug->position -= thisBug->front * WALK * dt;
 			break;
 		case 3:
+			thisBug->closeWings();
 			thisBug->position -= thisBug->front * RUN * dt;
-			thisBug->switchWings();
 			break;
-
+		case 5:
+			thisBug->switchWings();
+			thisBug->position[1] += FLYUP_SPEED;
+			thisBug->position -= thisBug->front * RUN * dt;
+			break;
+		case 6:
+			thisBug->switchWings();
+			thisBug->position -= thisBug->front * RUN * dt;
+			break;
+		case 7:
+			thisBug->openWings();
+			if (thisBug->position[1] > (FLYDOWN_SPEED + BUG_HEIGHT))
+				thisBug->position[1] -= FLYDOWN_SPEED;
+			else
+				thisBug->position[1] = BUG_HEIGHT;
+			thisBug->position -= thisBug->front * GLIDE * dt;
+			break;
+		case 8:
+			thisBug->openWings();
+			if (thisBug->position[1] > (FLYDOWN_SPEED + BUG_HEIGHT))
+				thisBug->position[1] -= FLYDOWN_SPEED;
+			else
+				thisBug->position[1] = BUG_HEIGHT;
+			thisBug->position -= thisBug->front * GLIDE * dt;
+			thisBug->yaw += ROTATE_BY; //changes their forward direction
+			thisBug->rotate(glm::vec3(0.f, -ROTATE_BY, 0.0f));
+			break;
+		case 9:
+			thisBug->openWings();
+			if (thisBug->position[1] > (FLYDOWN_SPEED + BUG_HEIGHT))
+				thisBug->position[1] -= FLYDOWN_SPEED;
+			else
+				thisBug->position[1] = BUG_HEIGHT;
+			thisBug->position -= thisBug->front * GLIDE * dt;
+			thisBug->rotate(glm::vec3(0.f, ROTATE_BY, 0.0f));
+			thisBug->yaw -= ROTATE_BY;
+			break;
 		}
 	}
 }
 
 void Game::update()
 {
-	//UPDATE INPUT ---
+	//UPDATE INPUT --- 
 	this->updateDt();
 	this->updateInput();
 	this->bugDriver();
+	updateCounter++;
+	if (updateCounter % CHECK_CHUNKS_EVERY == 0)
+	{
+		#pragma omp parallel
+		{
+			this->updateChunks(this->camera.getPosition());
+		}
+	}
+	if ((updateCounter + 5) % CHECK_BUGS_EVERY == 0)
+	{
+		#pragma omp parallel
+		{
+			this->updateBugDecisions(this->camera.getPosition());
+		}
+	}
 }
 
 void Game::render()
@@ -896,13 +992,19 @@ void Game::render()
 	//Update the uniforms
 	this->updateUniforms();
 
-	//Render terrain
-	for (auto&i : this->terrain)
-		i->render(this->shaders[SHADER_CORE_PROGRAM]);
+	#pragma omp parallel
+	{
+		//Render terrain
+		for (auto& i : this->terrain)
+			i->render(this->shaders[SHADER_CORE_PROGRAM]);
+	}
 
-	//Render models
-	for (auto& i : this->models)
-		i->render(this->shaders[SHADER_CORE_PROGRAM]);
+	#pragma omp parallel
+	{
+		//Render models
+		for (auto& i : this->models)
+			i->render(this->shaders[SHADER_CORE_PROGRAM]);
+	}
 
 	//Activate texture
 	//glActiveTexture(GL_TEXTURE0);

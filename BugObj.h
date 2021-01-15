@@ -68,7 +68,7 @@ public:
 	int behaviour; //0= flake. 1=paro
 	int decision; //0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn, 5 = flyaway, 6 = fly forward, 7 = glide
 
-	int flightLeft;
+	int flightTendency;
 	int flapCount;
 	glm::vec3 worldUp;
 	glm::vec3 front;
@@ -95,7 +95,7 @@ public:
 	{
 		this->behaviour = 0;
 		this->decision = 0;
-		this->flightLeft = 0;
+		this->flightTendency = 0;
 		flapCount = 0;
 		this->initAssimpVAO(modelData[0]);
 		this->modelData = modelData;
@@ -132,6 +132,7 @@ public:
 	{
 		this->ModelMatrix = glm::rotate(this->ModelMatrix, glm::radians(10.f), glm::vec3(20.f, 0.f, 0.f));
 	}*/
+	//flapCount 0 = closed, 1 = open
 	void switchWings()
 	{
 		if (flapCount == 0)
@@ -142,13 +143,19 @@ public:
 	}
 	void openWings()
 	{
-		flapCount = 1;
-		this->initAssimpVAO(modelData[1]);
+		if (flapCount == 0)
+		{
+			flapCount = 1;
+			this->initAssimpVAO(modelData[1]);
+		}
 	}
 	void closeWings()
 	{
-		flapCount = 1;
-		this->initAssimpVAO(modelData[1]);
+		if (flapCount == 1)
+		{
+			flapCount = 0;
+			this->initAssimpVAO(modelData[0]);
+		}
 	}
 	void updateCameraVectors()
 	{

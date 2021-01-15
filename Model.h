@@ -19,48 +19,46 @@ private:
 	}
 
 public:
-	int behaviour; //0= flake. 1=paro
-	int lastDecision; //0= stall, 1= turn, 2= walk, 3= runaway, 4 = other turn
-	int flightLeft; //0 = no, 1 = fly
+
 	Material* material;
 	Texture* overrideTextureDiffuse;
 	Texture* overrideTextureSpecular;
 	std::vector<Mesh*> meshes;
-	std::vector<MeshObj*> meshObjs;
+	std::vector<BugObj*> myBugObjs;
 	glm::vec3 position;
 	Model(
 		glm::vec3 position,
 		Material* material,
 		Texture* orTexDif,
 		Texture* orTexSpec,
-		std::vector<MeshObj*>& meshObjs
+		std::vector<BugObj*>& myBugObjs
 	)
 	{/*
-		for (auto& i : this->meshObjs)
+		for (auto& i : this->myBugObjs)
 		{
 			i->getScale();
 		}
-		cout << "MeshObjs created. Size= " << meshObjs.size() << "\n";
+		cout << "MeshObjs created. Size= " << myBugObjs.size() << "\n";
 
-		if (meshObjs.size() > 0)
-			cout << "MeshObjs[0] scale is " << glm::to_string((*meshObjs[0]).getScale());*/
-		//glm::vec3 o = meshObjs[42]->getScale();
+		if (myBugObjs.size() > 0)
+			cout << "MeshObjs[0] scale is " << glm::to_string((*myBugObjs[0]).getScale());*/
+		//glm::vec3 o = myBugObjs[42]->getScale();
 
-		//glm::vec3 scale = (*meshObjs[0]).getScale();
+		//glm::vec3 scale = (*myBugObjs[0]).getScale();
 
 		
-		//cout << "MeshObj scale= " << *(meshObjs[<0>]).doObjectFunc(); << "\n";
+		//cout << "BugObj scale= " << *(myBugObjs[<0>]).doObjectFunc(); << "\n";
 		this->position = position;
 		this->material = material;
 		this->overrideTextureDiffuse = orTexDif;
 		this->overrideTextureSpecular = orTexSpec;
 
-		for (auto* i : meshObjs)
+		for (auto* i : myBugObjs)
 		{
-			this->meshObjs.push_back(new MeshObj(*i));
+			this->myBugObjs.push_back(new BugObj(*i));
 		}
 
-		for (auto& i : this->meshObjs)
+		for (auto& i : this->myBugObjs)
 		{
 			i->move(this->position);
 			i->setOrigin(this->position);
@@ -80,9 +78,7 @@ public:
 		this->material = material;
 		this->overrideTextureDiffuse = orTexDif;
 		this->overrideTextureSpecular = orTexSpec;
-		this->behaviour = 0;
-		this->lastDecision = 0;
-		this->flightLeft = 0;
+
 
 		for (auto* i : meshes)
 		{
@@ -163,9 +159,9 @@ public:
 			i->render(shader); //Activates shader also
 		}
 
-		//cout << "size of meshObjs: " << this->meshObjs.size() << "\n\n";
+		//cout << "size of myBugObjs: " << this->myBugObjs.size() << "\n\n";
 		//Draw
-		for (auto& i : this->meshObjs)
+		for (auto& i : this->myBugObjs)
 		{
 			//Activate texture for each mesh
 			this->overrideTextureDiffuse->bind(0);
