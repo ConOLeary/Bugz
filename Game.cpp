@@ -11,7 +11,7 @@
 #define MESH_NAME2 "Objects/ladybug_flap.obj"
 #define CHUNK_SIZE 250
 #define ROCKS_PER_CHUNK 700
-#define BUGS_PER_CHUNK 20 ///////////////////////////// CMDFBUGS
+#define BUGS_PER_CHUNK 20
 #define MAX_ROCK_SIZE 3
 #define MAX_CHUNK_DIMENSION 100
 #define BIG_ROCK_RARITY 250
@@ -24,7 +24,6 @@
 #define FLIGHT_TENDENCY_DECREASE 20
 #define MAX_FLIGHT_TENDENCY 100
 #define FLYUPIF 22
-
 const float WALK = 5.0f;
 const float GLIDE = 13.0f;
 const float RUN = 35.0f;
